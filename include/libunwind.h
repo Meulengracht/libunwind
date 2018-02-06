@@ -120,7 +120,7 @@ _LIBUNWIND_EXPORT int unw_is_signal_frame(unw_cursor_t *) LIBUNWIND_AVAIL;
 _LIBUNWIND_EXPORT int unw_get_proc_name(unw_cursor_t *, char *, size_t, unw_word_t *) LIBUNWIND_AVAIL;
 //extern int       unw_get_save_loc(unw_cursor_t*, int, unw_save_loc_t*);
 
-extern unw_addr_space_t unw_local_addr_space;
+_LIBUNWIND_EXPORT extern unw_addr_space_t unw_local_addr_space;
 
 #ifdef UNW_REMOTE
 /*

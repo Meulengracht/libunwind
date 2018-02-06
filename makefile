@@ -1,6 +1,6 @@
 # Makefile for building the standard c++abi runtime-libraries for userspace
 # This will produce the file libunwind.lib
-INCLUDES =  -I../libcxx/cxx/include -I../include -Iinclude
+INCLUDES =  -I../cxx/include -I../../include -Iinclude
 
 # to generate $(wildcard ./*.S) $(SOURCES:.S=.o)
 SOURCES_S = $(wildcard src/*.S)
@@ -8,16 +8,16 @@ SOURCES_C = $(wildcard src/*.c) main.c
 SOURCES_X = src/libunwind.cpp src/Unwind-EHABI.cpp
 OBJECTS = $(SOURCES_S:.S=.o) $(SOURCES_C:.c=.o) $(SOURCES_X:.cpp=.o)
 
-CONFIG_FLAGS = -DNDEBUG -D_LIBUNWIND_IS_NATIVE_ONLY -D_LIBUNWIND_IS_BAREMETAL
+CONFIG_FLAGS = -DNDEBUG -D_LIBUNWIND_IS_NATIVE_ONLY
 CFLAGS = $(GCFLAGS) -std=c11 -D__OSLIB_UNWIND_IMPLEMENTATION $(CONFIG_FLAGS) $(INCLUDES)
 CXXFLAGS = $(GCXXFLAGS) -D__OSLIB_UNWIND_IMPLEMENTATION -fno-rtti -fno-exceptions $(CONFIG_FLAGS) $(INCLUDES)
-LFLAGS = $(GLFLAGS) /entry:__CrtLibraryEntry /dll /lldmap ../build/libc.lib ../build/libcrt.lib
+LFLAGS = $(GLFLAGS) /entry:__CrtLibraryEntry /dll /lldmap ../../build/libc.lib ../../build/libcrt.lib
 
 # default-target
 .PHONY: all
-all: ../deploy/libunwind.dll
+all: ../../deploy/libunwind.dll
 
-../deploy/libunwind.dll: $(OBJECTS)
+../../deploy/libunwind.dll: $(OBJECTS)
 	@printf "%b" "\033[0;36mCreating shared library " $@ "\033[m\n"
 	@$(LD) $(LFLAGS) $(OBJECTS) /out:$@
 
@@ -33,6 +33,6 @@ all: ../deploy/libunwind.dll
 
 .PHONY: clean
 clean:
-	@rm -f ../deploy/libunwind.dll
-	@rm -f ../deploy/libunwind.lib
+	@rm -f ../../deploy/libunwind.dll
+	@rm -f ../../deploy/libunwind.lib
 	@rm -f $(OBJECTS)

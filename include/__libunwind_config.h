@@ -25,12 +25,12 @@
 #define _LIBUNWIND_HIGHEST_DWARF_REGISTER_MIPS      65
 
 #if defined(_LIBUNWIND_IS_NATIVE_ONLY)
-# if defined(__i386__)
+# if defined(__i386__) || defined(i386)
 #  define _LIBUNWIND_TARGET_I386
 #  define _LIBUNWIND_CONTEXT_SIZE 8
 #  define _LIBUNWIND_CURSOR_SIZE 15
 #  define _LIBUNWIND_HIGHEST_DWARF_REGISTER _LIBUNWIND_HIGHEST_DWARF_REGISTER_X86
-# elif defined(__x86_64__)
+# elif defined(__x86_64__) || defined(__amd64__) || defined(amd64)
 #  define _LIBUNWIND_TARGET_X86_64 1
 #  if defined(_WIN64)
 #    define _LIBUNWIND_CONTEXT_SIZE 54
@@ -100,5 +100,22 @@
 # define _LIBUNWIND_CURSOR_SIZE 179
 # define _LIBUNWIND_HIGHEST_DWARF_REGISTER 287
 #endif // _LIBUNWIND_IS_NATIVE_ONLY
+
+#if defined(_LIBUNWIND_DISABLE_VISIBILITY_ANNOTATIONS)
+  #define _LIBUNWIND_EXPORT
+  #define _LIBUNWIND_HIDDEN
+#else
+  #if !defined(__ELF__) && !defined(__MACH__)
+    #ifdef __OSLIB_UNWIND_IMPLEMENTATION
+    #define _LIBUNWIND_EXPORT __declspec(dllexport)
+    #else 
+    #define _LIBUNWIND_EXPORT
+    #endif
+    #define _LIBUNWIND_HIDDEN
+  #else
+    #define _LIBUNWIND_EXPORT __attribute__((visibility("default")))
+    #define _LIBUNWIND_HIDDEN __attribute__((visibility("hidden")))
+  #endif
+#endif
 
 #endif // ____LIBUNWIND_CONFIG_H__

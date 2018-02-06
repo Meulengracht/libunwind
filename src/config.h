@@ -37,7 +37,7 @@
     #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND
     #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   1
   #endif
-#elif defined(_WIN32)
+#elif defined(_WIN32) || defined(MOLLENOS)
   #define _LIBUNWIND_SUPPORT_DWARF_UNWIND 1
 #else
   #if defined(__ARM_DWARF_EH__) || !defined(__arm__)
@@ -63,11 +63,11 @@
 #define _LIBUNWIND_BUILD_SJLJ_APIS
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) || defined(__ppc__) || defined(__ppc64__) || defined(__powerpc64__)
+#if defined(__i386__) || defined(__x86_64__) || defined(__amd64__) || defined(__ppc__) || defined(__ppc64__) || defined(__powerpc64__)
 #define _LIBUNWIND_SUPPORT_FRAME_APIS
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) ||                                \
+#if defined(__i386__) || defined(__x86_64__) || defined(__amd64__) ||          \
     defined(__ppc__) || defined(__ppc64__) || defined(__powerpc64__) ||        \
     (!defined(__APPLE__) && defined(__arm__)) ||                               \
     (defined(__arm64__) || defined(__aarch64__)) ||                            \

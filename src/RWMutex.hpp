@@ -16,6 +16,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#elif defined(MOLLENOS)
 #elif !defined(_LIBUNWIND_HAS_NO_THREADS)
 #include <pthread.h>
 #endif
@@ -32,6 +33,14 @@ public:
   bool unlock() { return true; }
 };
 
+#elif defined(MOLLENOS)
+class _LIBUNWIND_HIDDEN RWMutex {
+public:
+  bool lock_shared() { return true; }
+  bool unlock_shared() { return true; }
+  bool lock() { return true; }
+  bool unlock() { return true; }
+};
 #elif defined(_WIN32)
 
 class _LIBUNWIND_HIDDEN RWMutex {

@@ -1,5 +1,9 @@
 # Makefile for building the standard c++abi runtime-libraries for userspace
 # This will produce the file libunwind.lib
+
+# Include all the definitions for os
+include ../../../config/common.mk
+
 INCLUDES =  -I../cxx/include -I../../include -Iinclude
 
 # to generate $(wildcard ./*.S) $(SOURCES:.S=.o)

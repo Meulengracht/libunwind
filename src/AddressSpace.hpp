@@ -133,6 +133,7 @@ extern char __exidx_end;
 #include <link.h>
 #elif defined(MOLLENOS)
 #include <os/process.h>
+#include <os/pe.h>
 #else
 #include <windows.h>
 #include <psapi.h>
@@ -452,7 +453,7 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
   Handle_t ModuleList[PROCESS_MAXMODULES];
 
   // Get a list of loaded modules
-  if (ProcessGetModuleHandles(ModuleList) != OsSuccess) {
+  if (ProcessGetLibraryHandles(ModuleList) != OsSuccess) {
       return false;
   }
 

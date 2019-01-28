@@ -1,9 +1,8 @@
 //===------------------------- AddressSpace.hpp ---------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //
 // Abstracts accessing local vs remote address spaces.
@@ -18,7 +17,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32)
+#ifndef _LIBUNWIND_USE_DLADDR
+  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32)
+    #define _LIBUNWIND_USE_DLADDR 1
+  #else
+    #define _LIBUNWIND_USE_DLADDR 0
+  #endif
+#endif
+
+#if _LIBUNWIND_USE_DLADDR
 #include <dlfcn.h>
 #endif
 
@@ -150,7 +157,7 @@ namespace libunwind {
 struct UnwindInfoSections {
 #if defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND) || defined(_LIBUNWIND_SUPPORT_DWARF_INDEX) ||       \
     defined(_LIBUNWIND_SUPPORT_COMPACT_UNWIND)
-  // No dso_base for ARM EHABI.
+  // No dso_base for SEH or ARM EHABI.
   uintptr_t       dso_base;
 #endif
 #if defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND)
@@ -175,7 +182,7 @@ struct UnwindInfoSections {
 /// LocalAddressSpace is used as a template parameter to UnwindCursor when
 /// unwinding a thread in the same process.  The wrappers compile away,
 /// making local unwinds fast.
-class __attribute__((visibility("hidden"))) LocalAddressSpace {
+class _LIBUNWIND_HIDDEN LocalAddressSpace {
 public:
   typedef uintptr_t pint_t;
   typedef intptr_t  sint_t;
@@ -501,6 +508,12 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
     }
   }
   return false;
+#elif defined(_LIBUNWIND_SUPPORT_SEH_UNWIND) && defined(_WIN32)
+  // Don't even bother, since Windows has functions that do all this stuff
+  // for us.
+  (void)targetAddr;
+  (void)info;
+  return true;
 #elif defined(_LIBUNWIND_ARM_EHABI) && defined(__BIONIC__) &&                  \
     (__ANDROID_API__ < 21)
   int length = 0;
@@ -577,11 +590,11 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
 #endif
             cbdata->sects->dwarf_index_section = eh_frame_hdr_start;
             cbdata->sects->dwarf_index_section_length = phdr->p_memsz;
-            EHHeaderParser<LocalAddressSpace>::decodeEHHdr(
+            found_hdr = EHHeaderParser<LocalAddressSpace>::decodeEHHdr(
                 *cbdata->addressSpace, eh_frame_hdr_start, phdr->p_memsz,
                 hdrInfo);
-            cbdata->sects->dwarf_section = hdrInfo.eh_frame_ptr;
-            found_hdr = true;
+            if (found_hdr)
+              cbdata->sects->dwarf_section = hdrInfo.eh_frame_ptr;
           }
         }
 
@@ -631,7 +644,7 @@ inline bool LocalAddressSpace::findOtherFDE(pint_t targetAddr, pint_t &fde) {
 inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
                                                 size_t bufLen,
                                                 unw_word_t *offset) {
-#if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32) && !defined(MOLLENOS)
+#if _LIBUNWIND_USE_DLADDR
   Dl_info dyldInfo;
   if (dladdr((void *)addr, &dyldInfo)) {
     if (dyldInfo.dli_sname != NULL) {
@@ -640,6 +653,11 @@ inline bool LocalAddressSpace::findFunctionName(pint_t addr, char *buf,
       return true;
     }
   }
+#else
+  (void)addr;
+  (void)buf;
+  (void)bufLen;
+  (void)offset;
 #endif
   return false;
 }

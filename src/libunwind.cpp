@@ -1,9 +1,8 @@
 //===--------------------------- libunwind.cpp ----------------------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //
 //  Implements unw_* functions from <libunwind.h>
@@ -11,12 +10,6 @@
 //===----------------------------------------------------------------------===//
 
 #include <libunwind.h>
-
-#ifndef NDEBUG
-#include <cstdlib> // getenv
-#endif
-#include <new>
-#include <algorithm>
 
 #include "libunwind_ext.h"
 #include "config.h"
@@ -29,6 +22,10 @@
 #include "UnwindCursor.hpp"
 
 using namespace libunwind;
+
+// libunwind does not and should not depend on C++ library which means that we
+// need our own declaration of global placement new.
+void *operator new(size_t, void*);
 
 /// internal object to represent this processes address space
 LocalAddressSpace LocalAddressSpace::sThisAddressSpace;
@@ -67,6 +64,8 @@ _LIBUNWIND_EXPORT int unw_init_local(unw_cursor_t *cursor,
 # define REGISTER_KIND Registers_mips_newabi
 #elif defined(__mips__)
 # warning The MIPS architecture is not supported with this ABI and environment!
+#elif defined(__sparc__)
+# define REGISTER_KIND Registers_sparc
 #else
 # error Architecture not supported
 #endif
@@ -121,12 +120,14 @@ static bool is64bit(task_t task) {
 _LIBUNWIND_EXPORT unw_addr_space_t unw_create_addr_space_for_task(task_t task) {
 #if __i386__
   if (is64bit(task)) {
-    unw_addr_space_x86_64 *as = new unw_addr_space_x86_64(task);
+    unw_addr_space_x86_64 *as = malloc(sizeof(unw_addr_space_x86_64));
+    new (as) unw_addr_space_x86_64(task);
     as->taskPort = task;
     as->cpuType = CPU_TYPE_X86_64;
     //as->oas
   } else {
-    unw_addr_space_i386 *as = new unw_addr_space_i386(task);
+    unw_addr_space_i386 *as = malloc(sizeof(unw_addr_space_i386));
+    new (as) unw_addr_space_i386(task);
     as->taskPort = task;
     as->cpuType = CPU_TYPE_I386;
     //as->oas
@@ -143,18 +144,21 @@ _LIBUNWIND_EXPORT void unw_destroy_addr_space(unw_addr_space_t asp) {
 #if __i386__ || __x86_64__
   case CPU_TYPE_I386: {
     unw_addr_space_i386 *as = (unw_addr_space_i386 *)asp;
-    delete as;
+    as->~unw_addr_space_i386();
+    free(as);
   }
   break;
   case CPU_TYPE_X86_64: {
     unw_addr_space_x86_64 *as = (unw_addr_space_x86_64 *)asp;
-    delete as;
+    as->~unw_addr_space_x86_64();
+    free(as);
   }
   break;
 #endif
   case CPU_TYPE_POWERPC: {
     unw_addr_space_ppc *as = (unw_addr_space_ppc *)asp;
-    delete as;
+    as->~unw_addr_space_ppc();
+    free(as);
   }
   break;
   }
@@ -188,8 +192,20 @@ _LIBUNWIND_EXPORT int unw_set_reg(unw_cursor_t *cursor, unw_regnum_t regNum,
     co->setReg(regNum, (pint_t)value);
     // specical case altering IP to re-find info (being called by personality
     // function)
-    if (regNum == UNW_REG_IP)
+    if (regNum == UNW_REG_IP) {
+      unw_proc_info_t info;
+      // First, get the FDE for the old location and then update it.
+      co->getInfo(&info);
       co->setInfoBasedOnIPRegister(false);
+      // If the original call expects stack adjustment, perform this now.
+      // Normal frame unwinding would have included the offset already in the
+      // CFA computation.
+      // Note: for PA-RISC and other platforms where the stack grows up,
+      // this should actually be - info.gp. LLVM doesn't currently support
+      // any such platforms and Clang doesn't export a macro for them.
+      if (info.gp)
+        co->setReg(UNW_REG_SP, co->getReg(UNW_REG_SP) + info.gp);
+    }
     return UNW_ESUCCESS;
   }
   return UNW_EBADREG;

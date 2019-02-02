@@ -4,7 +4,7 @@
 # Include all the definitions for os
 include ../../../config/common.mk
 
-INCLUDES =  -I../cxx/include -I../../include -I../../libc/include -Iinclude
+INCLUDES =  -I../cxx/include -I../../include -I../../libddk/include -I../../libc/include -Iinclude
 
 # to generate $(wildcard ./*.S) $(SOURCES:.S=.o)
 SOURCES_S = $(wildcard src/*.S)

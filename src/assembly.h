@@ -94,7 +94,7 @@
 
 #define DEFINE_LIBUNWIND_FUNCTION(name)                   \
   .globl SYMBOL_NAME(name) SEPARATOR                      \
-  EXPORT_SYMBOL(name) SEPARATOR                           \
+  EXPORT_SYMBOL(SYMBOL_NAME(name)) SEPARATOR              \
   SYMBOL_IS_FUNC(SYMBOL_NAME(name)) SEPARATOR             \
   SYMBOL_NAME(name):
 

@@ -18,7 +18,7 @@
 #include <string.h>
 
 #ifndef _LIBUNWIND_USE_DLADDR
-  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32)
+  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32) && !defined(MOLLENOS)
     #define _LIBUNWIND_USE_DLADDR 1
   #else
     #define _LIBUNWIND_USE_DLADDR 0
@@ -139,7 +139,7 @@ extern char __exidx_end;
 #if !defined(_WIN32) && !defined(MOLLENOS)
 #include <link.h>
 #elif defined(MOLLENOS)
-#include <os/process.h>
+#include <ddk/process.h>
 #include <os/pe.h>
 #else
 #include <windows.h>

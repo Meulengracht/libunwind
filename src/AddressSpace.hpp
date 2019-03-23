@@ -139,7 +139,7 @@ extern char __exidx_end;
 #if !defined(_WIN32) && !defined(MOLLENOS)
 #include <link.h>
 #elif defined(MOLLENOS)
-#include <ddk/process.h>
+#include <ddk/services/process.h>
 #include <os/pe.h>
 #else
 #include <windows.h>

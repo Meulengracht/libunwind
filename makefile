@@ -12,7 +12,7 @@ SOURCES_C = $(wildcard src/*.c) main.c
 SOURCES_X = src/libunwind.cpp src/Unwind-EHABI.cpp
 OBJECTS = $(SOURCES_S:.S=.o) $(SOURCES_C:.c=.o) $(SOURCES_X:.cpp=.o)
 
-LIBRARIES = ../../build/libc.lib ../../build/ddk.lib ../../build/libcrt.lib
+LIBRARIES = ../../build/c.lib ../../build/ddk.lib ../../build/libcrt.lib
 CONFIG_FLAGS = -DNDEBUG -D_LIBUNWIND_IS_NATIVE_ONLY
 CFLAGS = $(GCFLAGS) -std=c11 -D__OSLIB_UNWIND_IMPLEMENTATION $(CONFIG_FLAGS) $(INCLUDES)
 CXXFLAGS = $(GCXXFLAGS) -D__OSLIB_UNWIND_IMPLEMENTATION -fno-rtti -fno-exceptions $(CONFIG_FLAGS) $(INCLUDES)

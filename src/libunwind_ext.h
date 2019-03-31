@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 // SPI
-_LIBUNWIND_EXPORT void unw_iterate_dwarf_unwind_cache(void (*func)(unw_word_t ip_start,
+extern void unw_iterate_dwarf_unwind_cache(void (*func)(unw_word_t ip_start,
                                                         unw_word_t ip_end,
                                                         unw_word_t fde,
                                                         unw_word_t mh));

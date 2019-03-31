@@ -36,9 +36,7 @@
     #define _LIBUNWIND_SUPPORT_COMPACT_UNWIND
     #define _LIBUNWIND_SUPPORT_DWARF_UNWIND   1
   #endif
-#elif defined(MOLLENOS)
-  #define _LIBUNWIND_SUPPORT_DWARF_UNWIND 1
-#elif defined(_WIN32)
+#elif defined(_WIN32) || defined(MOLLENOS)
   #ifdef __SEH__
     #define _LIBUNWIND_SUPPORT_SEH_UNWIND 1
   #else

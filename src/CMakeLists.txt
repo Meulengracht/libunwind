@@ -10,6 +10,7 @@ set(LIBUNWIND_C_SOURCES
     UnwindLevel1.c
     UnwindLevel1-gcc-ext.c
     Unwind-sjlj.c)
+unwind_append_if(LIBUNWIND_C_SOURCES MOLLENOS main.c)
 set_source_files_properties(${LIBUNWIND_C_SOURCES}
                             PROPERTIES
                               COMPILE_FLAGS "-std=c99")

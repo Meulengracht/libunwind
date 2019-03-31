@@ -18,7 +18,7 @@
 #include <string.h>
 
 #ifndef _LIBUNWIND_USE_DLADDR
-  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32) && !defined(MOLLENOS)
+  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32)
     #define _LIBUNWIND_USE_DLADDR 1
   #else
     #define _LIBUNWIND_USE_DLADDR 0

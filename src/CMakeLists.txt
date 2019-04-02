@@ -68,10 +68,13 @@ endif()
 # Setup flags.
 unwind_append_if(LIBUNWIND_CXX_FLAGS LIBUNWIND_HAS_NO_RTTI_FLAG -fno-rtti)
 
-unwind_append_if(LIBUNWIND_LINK_FLAGS LIBUNWIND_HAS_NODEFAULTLIBS_FLAG -nodefaultlibs)
+if (NOT MOLLENOS)
+  unwind_append_if(LIBUNWIND_LINK_FLAGS LIBUNWIND_HAS_NODEFAULTLIBS_FLAG -nodefaultlibs)
+endif()
 
-# MINGW_LIBRARIES is defined in config-ix.cmake
+# MINGW_LIBRARIES/VALI_LIBRARIES is defined in config-ix.cmake
 unwind_append_if(libraries MINGW "${MINGW_LIBRARIES}")
+unwind_append_if(libraries MOLLENOS "${VALI_LIBRARIES}")
 
 if (LIBUNWIND_HAS_NO_EXCEPTIONS_FLAG AND LIBUNWIND_HAS_FUNWIND_TABLES)
   list(APPEND LIBUNWIND_COMPILE_FLAGS -fno-exceptions)

@@ -139,8 +139,7 @@ extern char __exidx_end;
 #if !defined(_WIN32) && !defined(MOLLENOS)
 #include <link.h>
 #elif defined(MOLLENOS)
-#include <ddk/services/process.h>
-#include <os/pe.h>
+#include <os/unwind.h>
 #else
 #include <windows.h>
 #include <psapi.h>
@@ -457,55 +456,12 @@ inline bool LocalAddressSpace::findUnwindSections(pint_t targetAddr,
   }
   return false;
 #elif defined(_LIBUNWIND_SUPPORT_DWARF_UNWIND) && defined(MOLLENOS)
-  Handle_t ModuleList[PROCESS_MAXMODULES];
-
-  // Get a list of loaded modules
-  if (ProcessGetLibraryHandles(ModuleList) != OsSuccess) {
-      return false;
-  }
-
-  // Foreach module, get section headers
-  for (unsigned i = 0; i < PROCESS_MAXMODULES; i++) {
-    MzHeader_t *DosHeader           = NULL;
-    PeHeader_t *PeHeader            = NULL;
-    PeOptionalHeader_t *OptHeader   = NULL;
-    PeSectionHeader_t *Section      = NULL;
-    bool found_obj                  = false;
-    bool found_hdr                  = false;
-    if (ModuleList[i] == NULL) {
-        break;
-    }
-
-    // Initiate values
-    info.dso_base = (uintptr_t)ModuleList[i];
-    DosHeader   = (MzHeader_t*)ModuleList[i];
-    PeHeader    = (PeHeader_t*)(((uint8_t*)DosHeader) + DosHeader->PeHeaderAddress);
-    OptHeader   = (PeOptionalHeader_t*)(((uint8_t*)DosHeader) + DosHeader->PeHeaderAddress + sizeof(PeHeader_t));
-    if (OptHeader->Architecture == PE_ARCHITECTURE_32) {
-        Section = (PeSectionHeader_t*)(((uint8_t*)DosHeader) + DosHeader->PeHeaderAddress + sizeof(PeHeader_t) + sizeof(PeOptionalHeader32_t));
-    }
-    else if (OptHeader->Architecture == PE_ARCHITECTURE_64) {
-        Section = (PeSectionHeader_t*)(((uint8_t*)DosHeader) + DosHeader->PeHeaderAddress + sizeof(PeHeader_t) + sizeof(PeOptionalHeader64_t));
-    }
-    else {
-        return false;
-    }
-
-    // Iterate sections and spot correct one
-    for (unsigned j = 0; j < PeHeader->NumSections; j++, Section++) {
-      uintptr_t begin = Section->VirtualAddress + (uintptr_t)ModuleList[i];
-      uintptr_t end = begin + Section->VirtualSize;
-      if (!strncmp((const char *)Section->Name, ".text", PE_SECTION_NAME_LENGTH)) {
-        if (targetAddr >= begin && targetAddr < end)
-          found_obj = true;
-      } else if (!strncmp((const char *)Section->Name, ".eh_frame", PE_SECTION_NAME_LENGTH)) {
-        info.dwarf_section = begin;
-        info.dwarf_section_length = Section->VirtualSize;
-        found_hdr = true;
-      }
-      if (found_obj && found_hdr)
-        return true;
-    }
+  UnwindSection_t section;
+  if (UnwindGetSection((void*)targetAddr, &section) == OsSuccess) {
+    info.dso_base             = (uintptr_t)section.ModuleBase;
+    info.dwarf_section        = (uintptr_t)section.UnwindSectionBase;
+    info.dwarf_section_length = section.UnwindSectionLength;
+    return true;
   }
   return false;
 #elif defined(_LIBUNWIND_SUPPORT_SEH_UNWIND) && defined(_WIN32)

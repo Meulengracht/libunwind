@@ -34,10 +34,6 @@ if (LIBUNWIND_HAS_NODEFAULTLIBS_FLAG)
       list(APPEND CMAKE_REQUIRED_LIBRARIES gcc)
     endif ()
   endif ()
-  if (MOLLENOS)
-    set(VALI_LIBRARIES static_libcrt.lib static_libddk.lib static_librt c.lib m.lib)
-    list(APPEND CMAKE_REQUIRED_LIBRARIES ${VALI_LIBRARIES})
-  endif()
   if (MINGW)
     # Mingw64 requires quite a few "C" runtime libraries in order for basic
     # programs to link successfully with -nodefaultlibs.
